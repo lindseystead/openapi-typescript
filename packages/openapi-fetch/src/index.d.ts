@@ -136,6 +136,8 @@ export interface MiddlewareCallbackParams {
   request: Request;
   /** The original OpenAPI schema path (including curly braces) */
   readonly schemaPath: string;
+  /** Unserialized request body passed to openapi-fetch */
+  readonly body?: unknown;
   /** OpenAPI parameters as provided from openapi-fetch */
   readonly params: {
     query?: Record<string, unknown>;

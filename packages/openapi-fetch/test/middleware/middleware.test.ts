@@ -98,7 +98,7 @@ test("can modify response", async () => {
 
 test("returns original errors if nothing is returned", async () => {
   const actualError = new Error();
-  const client = createObservedClient<paths>({}, async (req) => {
+  const client = createObservedClient<paths>({}, async (_req) => {
     throw actualError;
   });
   client.use({
@@ -118,7 +118,7 @@ test("returns original errors if nothing is returned", async () => {
 test("can modify errors", async () => {
   const actualError = new Error();
   const modifiedError = new Error();
-  const client = createObservedClient<paths>({}, async (req) => {
+  const client = createObservedClient<paths>({}, async (_req) => {
     throw actualError;
   });
   client.use({
@@ -137,7 +137,7 @@ test("can modify errors", async () => {
 test("can catch errors and return a response instead", async () => {
   const actualError = new Error();
   const customResponse = Response.json({});
-  const client = createObservedClient<paths>({}, async (req) => {
+  const client = createObservedClient<paths>({}, async (_req) => {
     throw actualError;
   });
   client.use({
@@ -230,7 +230,7 @@ test("executes error handlers in expected order", async () => {
   const actualError = new Error();
   const modifiedError = new Error();
   const customResponse = Response.json({});
-  const client = createObservedClient<paths>({}, async (req) => {
+  const client = createObservedClient<paths>({}, async (_req) => {
     throw actualError;
   });
   client.use({
@@ -297,12 +297,14 @@ test("receives OpenAPI options passed in from parent", async () => {
 
   let receivedPath = "";
   let receivedParams: MiddlewareCallbackParams["params"] = {};
+  let receivedBody: unknown;
 
   const client = createObservedClient<paths>();
   client.use({
-    onRequest({ schemaPath, params }) {
+    onRequest({ schemaPath, params, body }) {
       receivedPath = schemaPath;
       receivedParams = params;
+      receivedBody = body;
       return undefined;
     },
   });
@@ -310,6 +312,7 @@ test("receives OpenAPI options passed in from parent", async () => {
 
   expect(receivedPath).toBe(pathname);
   expect(receivedParams).toEqual(tagData.params);
+  expect(receivedBody).toEqual(tagData.body);
 });
 
 test("can be skipped without interrupting request", async () => {
@@ -338,7 +341,7 @@ test("can be ejected", async () => {
     },
   };
 
-  const client = createObservedClient<paths>({}, async (req) => Response.json({ id: 123 }));
+  const client = createObservedClient<paths>({}, async (_req) => Response.json({ id: 123 }));
   client.use(errorMiddleware);
   client.eject(errorMiddleware);
 
@@ -421,7 +424,7 @@ test("baseUrl can be overridden", async () => {
 });
 
 test("auth header", async () => {
-  let accessToken: string | undefined = undefined;
+  let accessToken: string | undefined;
   const authMiddleware: Middleware = {
     async onRequest({ request }) {
       if (accessToken) {
